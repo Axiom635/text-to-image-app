@@ -7,11 +7,11 @@ from io import BytesIO
 # Get Hugging Face API token from environment variable
 HF_TOKEN = os.getenv("HF_TOKEN")
 
-# Hugging Face Stable Diffusion API
+# Hugging Face Stable Diffusion API endpoint
 API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2"
 headers = {"Authorization": f"Bearer {HF_TOKEN}"}
 
-# Function to generate image from prompt
+# Function to call the API
 def generate_image(prompt):
     response = requests.post(API_URL, headers=headers, json={"inputs": prompt})
     if response.status_code == 200:
@@ -19,7 +19,7 @@ def generate_image(prompt):
     else:
         return f"Error {response.status_code}: {response.text}"
 
-# Gradio UI
+# Gradio UI setup
 demo = gr.Interface(
     fn=generate_image,
     inputs=gr.Textbox(label="Enter your prompt"),
@@ -28,6 +28,8 @@ demo = gr.Interface(
     description="Generate images from text using Stable Diffusion via Hugging Face Inference API"
 )
 
-# Launch app
+# Required for Render: bind to external port
 if __name__ == "__main__":
-    demo.launch()
+    demo.launch(server_name="0.0.0.0", server_port=int(os.environ.get("PORT", 7860)))
+
+
