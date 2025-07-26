@@ -4,32 +4,37 @@ import os
 from PIL import Image
 from io import BytesIO
 
-# Get Hugging Face API token from environment variable
-HF_TOKEN = os.getenv("HF_TOKEN")
+HF_TOKEN = os.getenv("HF_TOKEN")  # Set in Render environment variables
 
-# Hugging Face Stable Diffusion API endpoint
-API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2"
+# ✅ Use the correct CPU-compatible endpoint
+API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2-1"
 headers = {"Authorization": f"Bearer {HF_TOKEN}"}
 
-# Function to call the API
 def generate_image(prompt):
     response = requests.post(API_URL, headers=headers, json={"inputs": prompt})
-    if response.status_code == 200:
+    print(response.status_code)
+print(response.headers.get("Content-Type"))
+print(response.text[:500])
+
+
+    # Check content type: if it's image, decode it
+    if response.status_code == 200 and "image" in response.headers.get("Content-Type", ""):
         return Image.open(BytesIO(response.content))
     else:
-        return f"Error {response.status_code}: {response.text}"
+        # Display the error for debugging
+        return f"Error: {response.status_code} - {response.text[:300]}"
 
-# Gradio UI setup
 demo = gr.Interface(
     fn=generate_image,
     inputs=gr.Textbox(label="Enter your prompt"),
     outputs=gr.Image(type="pil"),
     title="Text-to-Image Generator",
-    description="Generate images from text using Stable Diffusion via Hugging Face Inference API"
+    description="Generate images from text using Hugging Face Stable Diffusion 2.1 (CPU)"
 )
 
-# Required for Render: bind to external port
 if __name__ == "__main__":
     demo.launch(server_name="0.0.0.0", server_port=int(os.environ.get("PORT", 7860)))
+
+
 
 
